@@ -1,41 +1,27 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, render_template, request
 import qrcode
 import io
+import base64
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return jsonify({"message": "QR Code Generator API is running!"})
+    return render_template("index.html")
 
-@app.route("/generate_qr", methods=["POST"])
+@app.route("/generate", methods=["POST"])
 def generate_qr():
-    try:
-        data = request.json.get("text", "")
-        if not data:
-            return jsonify({"error": "No text provided"}), 400
+    data = request.form.get("data")
+    if not data:
+        return render_template("index.html", error="⚠ Please enter some text or URL.")
 
-        # Generate QR code
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(data)
-        qr.make(fit=True)
+    # Generate QR code
+    qr = qrcode.make(data)
+    buffer = io.BytesIO()
+    qr.save(buffer, format="PNG")
+    img_str = base64.b64encode(buffer.getvalue()).decode()
 
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        # Save to in-memory buffer
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        buf.seek(0)
-
-        return send_file(buf, mimetype="image/png")
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return render_template("index.html", qr_code=img_str, text=data)
 
 if __name__ == "__main__":
     app.run(debug=True)
