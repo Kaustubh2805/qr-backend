@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template("index.html")   # 👈 loads your webpage
+    return "<h1>Hello! Flask is serving HTML correctly 🎉</h1>"
 
 @app.route("/api")
 def api_status():
