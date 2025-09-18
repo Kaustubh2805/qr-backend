@@ -1,12 +1,18 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 import qrcode
 import io
+import os
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "<h1>Hello! Flask is serving HTML correctly 🎉</h1>"
+    return render_template('home.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/api")
 def api_status():
@@ -35,4 +41,5 @@ def generate_qr():
     return send_file(img_io, mimetype="image/png")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
