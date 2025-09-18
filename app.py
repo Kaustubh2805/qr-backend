@@ -1,27 +1,30 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify, send_file
 import qrcode
 import io
-import base64
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html")   # <-- This will now load your webpage
 
-@app.route("/generate", methods=["POST"])
+@app.route("/api")
+def api_status():
+    return {"message": "QR Code Generator API is running!"}
+
+@app.route("/generate_qr", methods=["POST"])
 def generate_qr():
     data = request.form.get("data")
     if not data:
-        return render_template("index.html", error="⚠ Please enter some text or URL.")
+        return jsonify({"error": "No data provided"}), 400
 
     # Generate QR code
     qr = qrcode.make(data)
-    buffer = io.BytesIO()
-    qr.save(buffer, format="PNG")
-    img_str = base64.b64encode(buffer.getvalue()).decode()
+    img_io = io.BytesIO()
+    qr.save(img_io, 'PNG')
+    img_io.seek(0)
 
-    return render_template("index.html", qr_code=img_str, text=data)
+    return send_file(img_io, mimetype="image/png")
 
 if __name__ == "__main__":
     app.run(debug=True)
