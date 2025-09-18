@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html")   # 👈 loads your webpage
 
 @app.route("/api")
 def api_status():
@@ -15,25 +15,21 @@ def api_status():
 @app.route("/generate_qr", methods=["POST"])
 def generate_qr():
     data = request.form.get("data")
-    fg_color = request.form.get("fg", "black")
-    bg_color = request.form.get("bg", "white")
+    fg = request.form.get("fg", "#000000")
+    bg = request.form.get("bg", "#ffffff")
     size = int(request.form.get("size", 10))
 
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    qr = qrcode.QRCode(
-        version=1,
-        box_size=size,
-        border=4
-    )
+    # Generate QR code
+    qr = qrcode.QRCode(box_size=size, border=2)
     qr.add_data(data)
     qr.make(fit=True)
-
-    img = qr.make_image(fill_color=fg_color, back_color=bg_color)
+    img = qr.make_image(fill_color=fg, back_color=bg)
 
     img_io = io.BytesIO()
-    img.save(img_io, "PNG")
+    img.save(img_io, 'PNG')
     img_io.seek(0)
 
     return send_file(img_io, mimetype="image/png")
